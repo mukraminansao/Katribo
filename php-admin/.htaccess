@@ -1,0 +1,3 @@
+RewriteEngine On
+# Source and dependencies are served only by the GitHub Node server's dist folder.
+RewriteRule ^katribo-react(?:/|$) - [F,L]

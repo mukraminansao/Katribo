@@ -34,7 +34,7 @@ const keyOf = (id: string, size: SizeId, addons: AddonId[]) => [id, size, ...[..
 export const cart = {
   add(id: string, opts: { size?: SizeId; addons?: AddonId[]; qty?: number } = {}): boolean {
     const { size = 'regular', addons = [], qty = 1 } = opts;
-    if (unitPrice(id, size, addons) == null) return false;
+    if (PRODUCT_BY_ID[id]?.soldOut || unitPrice(id, size, addons) == null) return false;
     const key = keyOf(id, size, addons);
     const found = items.find((i) => i.key === key);
     commit(found
@@ -44,6 +44,8 @@ export const cart = {
   },
   setQty(key: string, qty: number) {
     if (qty <= 0) return cart.remove(key);
+    const item = items.find(i => i.key === key);
+    if (item && PRODUCT_BY_ID[item.id]?.soldOut && qty > item.qty) return;
     commit(items.map((i) => (i.key === key ? { ...i, qty: Math.min(99, qty) } : i)));
   },
   remove(key: string) { commit(items.filter((i) => i.key !== key)); },

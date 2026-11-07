@@ -19,6 +19,9 @@ export interface Product {
   category: Category;
   price: number | null;
   image: string;
+  soldOut?: boolean;
+  featured?: boolean;
+  featuredRank?: number;
   nonCoffee: boolean;
   description?: string;
 }
@@ -26,20 +29,22 @@ export interface Product {
 /** Filter order follows the UI reference (Specialty and Pastries added). */
 export const FILTERS: Filter[] = ['All', 'Coffee', 'Milkshake', 'Latte', 'Macchiato', 'Specialty', 'Non-Coffee', 'Pastries'];
 
-export const SIZES = [
+const DEFAULT_SIZES = [
   { id: 'regular', label: 'Regular', add: 0 },
   { id: 'large', label: 'Large', add: 20 },
 ] as const;
 
-export const ADDONS = [
+const DEFAULT_ADDONS = [
   { id: 'extra-espresso', label: 'Extra Espresso', price: 20 },
   { id: 'caramel-syrup', label: 'Caramel Syrup', price: 20 },
   { id: 'whipped-cream', label: 'Whipped Cream', price: 20 },
   { id: 'oat-milk', label: 'Oat Milk', price: 30 },
 ] as const;
 
-export type SizeId = (typeof SIZES)[number]['id'];
-export type AddonId = (typeof ADDONS)[number]['id'];
+export type SizeId = (typeof DEFAULT_SIZES)[number]['id'];
+export type AddonId = (typeof DEFAULT_ADDONS)[number]['id'];
+export let SIZES: readonly { id: SizeId; label: string; add: number }[] = DEFAULT_SIZES;
+export let ADDONS: readonly { id: AddonId; label: string; price: number }[] = DEFAULT_ADDONS;
 
 const img = (file: string) => `/images/drinks/${file}.jpg`;
 
@@ -77,11 +82,40 @@ const RAW: [string, string, Category, number | null, string, boolean, string?][]
   ['chocolate-cake', 'Chocolate Cake', 'Pastries', null, 'chocolate-cake', false],
 ];
 
-export const PRODUCTS: Product[] = RAW.map(([id, name, category, price, file, nonCoffee, description]) => ({
+export let PRODUCTS: Product[] = RAW.map(([id, name, category, price, file, nonCoffee, description]) => ({
   id, name, category, price, image: img(file), nonCoffee, description,
 }));
 
-export const PRODUCT_BY_ID: Record<string, Product> = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
+export let PRODUCT_BY_ID: Record<string, Product> = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
+
+// These legacy photos are enlarged mockup crops, rather than full-size product photos.
+// Match the image URL so a future replacement photo for the same drink is shown normally.
+const RETIRED_PHOTOS = new Set(['cold-brew', 'espresso', 'hazelnut-latte', 'hot-latte', 'hojicha-latte']
+  .map((name) => `/media/assets/img/drinks/${name}.jpg`));
+
+/** Called before importing App/cart: the live admin menu replaces every sample entry. */
+export function installCatalogue(data: { products: Product[]; sizes: typeof SIZES; addons: typeof ADDONS }) {
+  if (!Array.isArray(data.products) || !Array.isArray(data.sizes) || !Array.isArray(data.addons)) throw new Error('Invalid menu response.');
+  const categories: Category[] = ['Coffee', 'Milkshake', 'Latte', 'Macchiato', 'Specialty', 'Pastries'];
+  const products = data.products.map((p) => {
+    if (!p || typeof p.id !== 'string' || !/^[a-z0-9-]{1,80}$/.test(p.id) || typeof p.name !== 'string'
+      || !categories.includes(p.category) || typeof p.image !== 'string' || !/^\/(images|media)\//.test(p.image)
+      || (p.price !== null && (!Number.isInteger(p.price) || p.price < 0))
+      || (p.soldOut !== undefined && typeof p.soldOut !== 'boolean')
+      || (p.featured !== undefined && typeof p.featured !== 'boolean')
+      || (p.featuredRank !== undefined && (!Number.isInteger(p.featuredRank) || p.featuredRank < 0))) throw new Error('Invalid menu item.');
+    return { ...p, image: RETIRED_PHOTOS.has(p.image.split('?')[0]) ? '/images/drinks/photo-unavailable.svg' : p.image,
+      description: p.description || undefined };
+  });
+  if (new Set(products.map((p) => p.id)).size !== products.length) throw new Error('Duplicate menu item.');
+  if (data.sizes.length !== DEFAULT_SIZES.length || data.addons.length !== DEFAULT_ADDONS.length
+    || data.sizes.some((s) => !DEFAULT_SIZES.some((d) => d.id === s.id) || !Number.isInteger(s.add) || s.add < 0)
+    || data.addons.some((a) => !DEFAULT_ADDONS.some((d) => d.id === a.id) || !Number.isInteger(a.price) || a.price < 0)) throw new Error('Invalid menu options.');
+  PRODUCTS = products;
+  PRODUCT_BY_ID = Object.fromEntries(products.map((p) => [p.id, p]));
+  SIZES = data.sizes;
+  ADDONS = data.addons;
+}
 
 export const pick = (ids: string[]) => ids.map((id) => PRODUCT_BY_ID[id]).filter(Boolean) as Product[];
 

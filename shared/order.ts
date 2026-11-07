@@ -5,7 +5,25 @@
  * DEMO ONLY: nothing is stored, charged or sent to the café.
  * To go live, save `lines` to a database / send a notification inside handleOrder.
  */
-import { ADDONS, PRODUCT_BY_ID, SIZES, type AddonId, type SizeId } from '../src/data/menu';
+import { ADDONS, PRODUCTS, PRODUCT_BY_ID, SIZES, type AddonId, type SizeId } from '../src/data/menu';
+
+/** The original eight homepage favourites (the admin's featured list starts from these). */
+const DEMO_FEATURED = ['caramel-macchiato', 'iced-latte', 'spanish-latte', 'chocolate-milkshake',
+  'matcha-latte', 'strawberry-milkshake', 'ube-milkshake', 'cookies-cream'];
+
+/**
+ * Built-in sample menu in the same shape as the PHP admin's /api/catalogue.
+ * Used by the public demo (e.g. Render), which has no PHP/MySQL admin behind it.
+ */
+export function demoCatalogue() {
+  return {
+    ok: true,
+    demo: true,
+    products: PRODUCTS.map((p) => ({ ...p, featured: DEMO_FEATURED.includes(p.id), featuredRank: DEMO_FEATURED.indexOf(p.id) + 1 })),
+    sizes: SIZES,
+    addons: ADDONS,
+  };
+}
 
 type Result = { status: number; data: Record<string, unknown> };
 

@@ -11,7 +11,8 @@ import { FilterBar } from './Menu';
 const FILTERS = ['All', 'Drinks', 'Food', 'Interior', 'Equipment', 'The View'] as const;
 type Cat = (typeof FILTERS)[number];
 
-const d = (id: string) => PRODUCT_BY_ID[id].image;
+// Gallery photos remain viewable even when their menu item is hidden or removed.
+const d = (id: string) => PRODUCT_BY_ID[id]?.image ?? `/images/drinks/${id}.jpg`;
 // [src, alt, caption, categories, object-position]
 const PHOTOS: [string, string, string, Cat[], string][] = [
   [d('caramel-macchiato'), 'Iced caramel macchiato in a KATRIBO cup', 'Caramel Macchiato', ['Drinks'], '50% 35%'],

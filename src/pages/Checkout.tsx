@@ -4,6 +4,7 @@ import { ButtonLink, Img } from '../components/Primitives';
 import { PRODUCT_BY_ID, unitPrice } from '../data/menu';
 import { SITE } from '../data/site';
 import { cart, useCart } from '../lib/cart';
+import { checkoutKey, clearCheckoutKey } from '../lib/checkout-request';
 import { Link } from '../lib/router';
 import { cx, describe, peso, useTitle } from '../lib/ui';
 import { CheckoutSteps, PAYMENTS, PickupInfo, Totals, type PaymentId } from './Cart';
@@ -55,6 +56,7 @@ export default function Checkout() {
   const [done, setDone] = useState<{ ref: string; name: string; total: number; pay: string } | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const note = cart.getNote().trim();
+  const soldOutItems = items.filter(item => PRODUCT_BY_ID[item.id]?.soldOut);
 
   const set = (k: keyof Fields) => (e: ChangeEvent<HTMLInputElement>) => {
     setF({ ...f, [k]: e.target.value });
@@ -65,19 +67,22 @@ export default function Checkout() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setFormError('');
+    if (soldOutItems.length) { setFormError('An item in your cart is sold out. Remove it from your cart before placing this order.'); return; }
     const next = Object.fromEntries((Object.keys(RULES) as (keyof Fields)[]).map((k) => [k, RULES[k](f[k])])) as Fields;
     setErr(next);
     const first = (Object.keys(next) as (keyof Fields)[]).find((k) => next[k]);
     if (first) { formRef.current?.querySelector<HTMLInputElement>(`#co-${first}`)?.focus(); return; }
     setBusy(true);
     try {
+      const payload = { ...f, fulfilment: 'pickup', note, paymentMethod: pay, expectedTotal: subtotal,
+        items: items.map(({ id, size, addons, qty }) => ({ id, size, addons, qty })) };
       const res = await fetch('/api/place-order', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...f, fulfilment: 'pickup', note, items: items.map(({ id, size, addons, qty }) => ({ id, size, addons, qty })) }),
+        body: JSON.stringify({ ...payload, requestKey: checkoutKey(payload) }),
       });
       const data = await res.json().catch(() => ({ ok: false, message: 'Unexpected server response.' }));
       if (!res.ok || !data.ok) { setErr(data.fields ?? {}); throw new Error(data.message || 'Could not place the order.'); }
-      cart.clear(); cart.setNote('');
+      cart.clear(); cart.setNote(''); clearCheckoutKey();
       setDone({ ref: data.ref, name: data.name, total: data.total, pay: method.label });
       scrollTo({ top: 0, behavior: 'smooth' });
     } catch (x) {
@@ -98,7 +103,7 @@ export default function Checkout() {
                 <span aria-hidden="true" className="absolute inset-0 animate-[ring-out_1.6s_var(--ease-out-quint)_infinite] rounded-full border-2 border-white/50" />
                 <span className="relative grid h-[84px] w-[84px] place-items-center rounded-full bg-white text-ink shadow-[0_0_40px_rgba(255,255,255,.35)]"><Icon name="check" size={40} stroke={2.4} /></span>
               </span>
-              <p className="eyebrow mt-7">Demonstration order</p>
+              <p className="eyebrow mt-7">Pickup order</p>
               <h1 className="display mt-3 text-[40px] sm:text-[56px]">Order <span className="text-outline">received</span></h1>
               <p className="mt-4 text-[18px] text-soft">Thanks, {done.name}! Here&apos;s your order reference.</p>
             </div>
@@ -117,7 +122,7 @@ export default function Checkout() {
               </div>
               <div className="col-span-2"><PickupInfo /></div>
             </dl>
-            <p className="relative px-6 pb-7 text-[13.5px] text-mute sm:px-12">This is a demo — no payment was taken and the café has not received this order.</p>
+            <p className="relative px-6 pb-7 text-[13.5px] text-mute sm:px-12">Your order is saved for the Katribo team. Please pay at pickup; no online payment has been taken.</p>
           </div>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <ButtonLink to="/" size="lg" arrow>Back to Home</ButtonLink>
@@ -134,9 +139,10 @@ export default function Checkout() {
         <Link to="/cart" className="back-pill"><span className="bp-icon"><Icon name="arrow-left" size={17} /></span>Back to Cart</Link>
         <p className="eyebrow mt-7 flex animate-rise items-center gap-3"><span aria-hidden="true" className="h-px w-8 bg-crema/80" />Almost there</p>
         <h1 className="display mt-3 animate-rise text-[44px] sm:text-[60px] lg:text-[72px]">Checkout</h1>
+        {soldOutItems.length ? <p role="alert" className="mt-5 rounded-2xl border border-crema/40 p-4 text-[15px] text-crema">{soldOutItems.map(item => PRODUCT_BY_ID[item.id].name).join(', ')} is sold out. <Link to="/cart" className="font-bold underline">Return to your cart</Link> to remove unavailable items.</p> : null}
         {items.length > 0 && <div className="mt-6 animate-rise"><CheckoutSteps current={2} /></div>}
         <p className="mt-6 flex max-w-[640px] items-start gap-3 rounded-2xl border border-white/12 bg-white/[.03] px-4 py-3.5 text-[14.5px] leading-relaxed text-soft">
-          <Icon name="info" size={18} className="mt-0.5 shrink-0" />Demonstration checkout — no payment is taken and orders are not sent to the café.
+          <Icon name="info" size={18} className="mt-0.5 shrink-0" />Your order will be sent to the Katribo team. Payment is made at pickup.
         </p>
       </header>
 
@@ -226,7 +232,7 @@ export default function Checkout() {
               <div className="panel p-5 sm:p-7">
                 <Totals subtotal={subtotal} />
                 {formError && <p role="alert" className="mt-5 flex gap-2.5 rounded-2xl border border-white/25 px-4 py-3 text-[14.5px]"><Icon name="info" size={17} className="mt-0.5 shrink-0" />{formError}</p>}
-                <button type="submit" disabled={busy} className="btn btn-primary btn-lg mt-6 w-full justify-between gap-3 pl-6 pr-2">
+                <button type="submit" disabled={busy || soldOutItems.length > 0} className="btn btn-primary btn-lg mt-6 w-full justify-between gap-3 pl-6 pr-2">
                   {busy
                     ? <span className="flex flex-1 items-center justify-center gap-2.5"><span className="h-4 w-4 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />Placing order…</span>
                     : <><span className="flex items-center gap-2.5"><Icon name="check" size={18} stroke={2.6} />Place Order</span><span className="price-chip">{peso(subtotal)}</span></>}

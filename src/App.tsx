@@ -1,7 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { CartDrawer } from './components/CartDrawer';
+import { SearchOverlay } from './components/SearchOverlay';
+import { closeCartDrawer } from './lib/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { Footer, Header, MobileMenu, SearchOverlay, Toast } from './components/Chrome';
+import { Footer, Header, MobileMenu, Toast } from './components/Chrome';
 import { matchPath, RouterProvider, useLocation } from './lib/router';
 import Home from './pages/Home';
 
@@ -49,20 +51,25 @@ function Shell() {
   const [search, setSearch] = useState(false);
   const closeMenu = useCallback(() => setMenu(false), []);
 
+  const closeSearch = useCallback(() => setSearch(false), []);
+  const openSearch = useCallback(() => { setMenu(false); closeCartDrawer(); setSearch(true); }, []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const typing = /input|textarea|select/i.test((e.target as HTMLElement)?.tagName);
-      if ((e.key === '/' && !typing) || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); setSearch(true); }
-      if (e.key === 'Escape') { setSearch(false); setMenu(false); }
+      if (e.defaultPrevented || e.repeat || e.isComposing) return;
+      const target = e.target instanceof HTMLElement ? e.target : null;
+      const typing = !!target?.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]');
+      if ((e.key === '/' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); openSearch(); }
+      if (e.key === 'Escape') setMenu(false);
     };
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
-  }, []);
+  }, [openSearch]);
 
   return (
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-ink">Skip to content</a>
-      <Header onMenu={() => setMenu(true)} onSearch={() => setSearch(true)} />
+      <Header onMenu={() => setMenu(true)} onSearch={openSearch} searchOpen={search} />
       <main id="main" className="min-h-[100svh]">
         <ErrorBoundaryForRoute>
           <Suspense fallback={<div className="min-h-[100svh]" />}>
@@ -71,8 +78,8 @@ function Shell() {
         </ErrorBoundaryForRoute>
       </main>
       <Footer />
-            <MobileMenu open={menu} onClose={closeMenu} />
-      <SearchOverlay open={search} onClose={() => setSearch(false)} />
+      <MobileMenu open={menu} onClose={closeMenu} />
+      {search && <SearchOverlay onClose={closeSearch} />}
       <CartDrawer />
       <Toast />
     </>

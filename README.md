@@ -1,5 +1,21 @@
 # KATRIBO — Welcome to Our Backyard
 
+**Live demo:** https://katribo-demo.onrender.com (free hosting: the first visit can take about a minute to wake up)
+
+## Two ways it runs
+
+- **Public demo (Render):** the website serves its built-in sample menu and checks every order on the server, but nothing is saved, charged or sent. This happens automatically on Render, or anywhere with `KATRIBO_DEMO=1`.
+- **Connected to the café admin (XAMPP):** the menu and pickup orders come from the PHP + MySQL admin in [`php-admin/`](php-admin/). Staff manage the menu, orders, featured drinks and team accounts there. The website forwards `/api/catalogue` and `/api/place-order` to it through `php-backend.mjs` when `KATRIBO_BACKEND_URL` is set.
+
+### Run the connected version locally
+
+1. Copy `php-admin/` to `C:\xampp\htdocs\Katribo`, and put this website in `C:\xampp\htdocs\Katribo\katribo-react`.
+2. Start Apache and MySQL in XAMPP, then run `C:\xampp\php\php.exe tools/setup-database.php` once from `C:\xampp\htdocs\Katribo`.
+3. In `katribo-react`, run `npm ci --include=dev` and `npm run build:server`.
+4. Double-click `Start-Katribo.cmd`. Create the owner account at http://localhost/Katribo/admin/ on first use.
+
+See [`php-admin/LOCAL-WEBSITE.md`](php-admin/LOCAL-WEBSITE.md) and [`php-admin/admin/README.md`](php-admin/admin/README.md) for the full admin guide. Admin account data (`admin/private/*.php`) is never committed.
+
 A premium, all-black coffee shop website: menu with category filters, drink details with sizes and add-ons, a persistent cart, a validated checkout, a gallery with a lightbox, and a contact page. On phones it works like an app, with a bottom tab bar and a sticky Add to Cart bar.
 
 **Stack:** React 19 · TypeScript · Vite · Tailwind CSS v4 · Netlify (static hosting + one serverless function)

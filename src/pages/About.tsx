@@ -1,14 +1,7 @@
-import { Icon, type IconName } from '../components/Icon';
+import { BrandHighlights } from '../components/BrandHighlights';
 import { ButtonLink, Img, Reveal } from '../components/Primitives';
 import { IMAGES } from '../data/site';
-import { cx, useParallax, useTitle } from '../lib/ui';
-
-const VALUES: [IconName, string, string][] = [
-  ['leaf', 'Quality Beans', 'Carefully selected'],
-  ['heart', 'Crafted with Care', 'Made by passionate baristas'],
-  ['users', 'A Cozy Space', 'For everyone'],
-  ['wave', 'Good Vibes', 'By the Bay'],
-];
+import { useParallax, useTitle } from '../lib/ui';
 
 const PILLARS: [string, string, string, string, string][] = [
   ['01', 'Quality Coffee', 'Carefully selected beans, prepared at the bar by baristas who care about every cup.', IMAGES.bar, '50% 50%'],
@@ -21,33 +14,23 @@ export default function About() {
   const bg = useParallax<HTMLImageElement>(0.08);
   return (
     <>
-      {/* Hero — photo on the right fading into black (reference "About KATRIBO" frame) */}
-      <section className="relative isolate overflow-hidden pt-[104px] pb-12 md:pt-[150px] md:pb-16">
-        <div aria-hidden="true" className="absolute inset-y-0 right-0 -z-10 w-full overflow-hidden md:w-[66%]">
-          <img ref={bg} src={IMAGES.sign} alt="" fetchPriority="high"
-            className="h-[115%] w-full object-cover [object-position:50%_0%] brightness-[.5] saturate-[.85] max-md:origin-[75%_0] max-md:scale-[1.6] md:[object-position:50%_58%] md:brightness-[.62]" />
-          <div className="absolute inset-0 bg-[linear-gradient(0deg,var(--color-ink)_0%,rgba(8,8,8,.85)_45%,rgba(8,8,8,.65)_100%)] md:bg-[linear-gradient(90deg,var(--color-ink)_0%,rgba(8,8,8,.7)_32%,rgba(8,8,8,.05)_72%),linear-gradient(0deg,var(--color-ink)_0%,var(--color-ink)_30%,rgba(8,8,8,.55)_52%,transparent_72%)]" />
-        </div>
-        <div className="shell">
-          <div className="max-w-[640px]">
-            <p className="eyebrow flex animate-rise items-center gap-3"><span aria-hidden="true" className="h-px w-8 bg-crema/80" />Our Story</p>
-            <h1 className="display mt-3 animate-rise text-[44px] sm:text-[60px] lg:text-[72px]">About <span className="text-outline">KATRIBO</span></h1>
-            <p className="mt-6 max-w-[560px] animate-rise text-[16px] leading-relaxed text-[#e6e6e6] [animation-delay:80ms] lg:text-[19px]">
+      <section className="shell pt-[100px] pb-10 md:pt-[132px] md:pb-16" aria-labelledby="about-title">
+        <div className="about-intro grid overflow-hidden rounded-3xl border border-white/10 bg-ink-2 lg:grid-cols-2">
+          <div className="relative z-10 flex flex-col items-start justify-center px-6 py-9 sm:px-10 sm:py-12 lg:px-12 lg:py-16">
+            <p className="eyebrow flex items-center gap-3"><span aria-hidden="true" className="h-px w-8 bg-crema/80" />Our story</p>
+            <h1 id="about-title" className="display mt-4 text-[40px] sm:text-[56px] lg:text-[64px]">About<br /><span className="text-outline">KATRIBO</span></h1>
+            <p className="mt-6 max-w-[480px] text-[16px] leading-relaxed text-soft lg:text-[17px]">
               KATRIBO is more than just a coffee shop. It&apos;s a backyard for good coffee, good conversations, and good people.
-              Inspired by the view, the community, and the simple moments that make life better.
             </p>
+            <p className="mt-3 max-w-[480px] text-[15px] leading-relaxed text-mute lg:text-[16px]">Inspired by the view, the community, and the simple moments that make life better.</p>
+            <div className="mt-7 flex flex-wrap gap-3"><ButtonLink to="/menu" arrow>Explore Menu</ButtonLink><ButtonLink to="/contact" variant="outline">Visit Us</ButtonLink></div>
           </div>
-          <ul className="mt-10 grid grid-cols-2 rounded-2xl border border-line bg-ink-2/80 py-4 backdrop-blur-sm md:mt-20 md:grid-cols-4 md:rounded-none md:border-0 md:bg-transparent md:py-0 md:backdrop-blur-none">
-            {VALUES.map(([icon, a, b], i) => (
-              <li key={a} style={{ animationDelay: `${200 + i * 70}ms` }}
-                className={cx('grid animate-rise justify-items-center gap-1 px-3 py-2.5 text-center md:py-1',
-                  i % 2 === 1 && 'border-l border-line', i === 2 && 'md:border-l md:border-line', i >= 2 && 'max-md:border-t max-md:border-line max-md:pt-4 max-md:mt-2')}>
-                <Icon name={icon} size={30} className="mb-2" />
-                <strong className="text-[15px] font-bold md:text-[18px]">{a}</strong>
-                <span className="text-[13px] text-mute md:text-[15px]">{b}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="relative aspect-[4/3] overflow-hidden lg:aspect-auto lg:min-h-[500px]">
+            <img ref={bg} src={IMAGES.sign} alt="Inside Katribo, with the welcome to our backyard sign above the coffee bar" fetchPriority="high" className="absolute inset-0 h-[110%] w-full object-cover [object-position:50%_45%]" />
+            <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(0deg,rgba(8,8,8,.7),transparent_45%)] lg:bg-[linear-gradient(90deg,#111_0%,transparent_28%),linear-gradient(0deg,rgba(8,8,8,.7),transparent_45%)]" />
+            <p className="script absolute bottom-6 right-6 -rotate-3 text-[38px] text-white sm:text-[48px]">Welcome to our backyard.</p>
+          </div>
+          <div className="border-t border-white/10 px-6 sm:px-10 lg:col-span-2 lg:px-12"><BrandHighlights /></div>
         </div>
       </section>
 

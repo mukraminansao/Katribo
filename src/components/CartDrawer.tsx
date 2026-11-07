@@ -84,12 +84,13 @@ export function CartDrawer() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[15.5px] font-bold">{p.name}</p>
                         {opts && <p className="truncate text-[13.5px] text-soft">{opts}</p>}
+                        {p.soldOut ? <p className="text-[12px] font-semibold text-crema">Sold out — remove before checkout.</p> : null}
                       </div>
                       <button type="button" onClick={() => cart.remove(it.key)} aria-label={`Remove ${p.name}`}
                         className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-mute transition-colors hover:bg-white hover:text-ink"><Icon name="trash" size={15} /></button>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <Stepper size="sm" value={it.qty} min={0} label={`Quantity for ${p.name}`} onChange={(n) => cart.setQty(it.key, n)} />
+                      <Stepper size="sm" value={it.qty} min={0} disabled={p.soldOut} label={`Quantity for ${p.name}`} onChange={(n) => cart.setQty(it.key, n)} />
                       <p className="tabular text-[17px] font-extrabold">{peso(unit * it.qty)}</p>
                     </div>
                   </div>

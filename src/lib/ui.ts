@@ -15,14 +15,26 @@ export function useTitle(title: string) {
 }
 
 /** Locks page scroll while an overlay is open (keeps scrollbar width stable). */
+let scrollLocks = 0;
+let scrollBeforeLock: { overflow: string; paddingRight: string } | null = null;
 export function useScrollLock(locked: boolean) {
   useEffect(() => {
     if (!locked) return;
-    const { overflow, paddingRight } = document.body.style;
-    const gap = innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = 'hidden';
-    if (gap) document.body.style.paddingRight = `${gap}px`;
-    return () => { document.body.style.overflow = overflow; document.body.style.paddingRight = paddingRight; };
+    if (scrollLocks === 0) {
+      scrollBeforeLock = { overflow: document.body.style.overflow, paddingRight: document.body.style.paddingRight };
+      const gap = innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      if (gap) document.body.style.paddingRight = `${gap}px`;
+    }
+    scrollLocks++;
+    return () => {
+      scrollLocks--;
+      if (scrollLocks === 0 && scrollBeforeLock) {
+        document.body.style.overflow = scrollBeforeLock.overflow;
+        document.body.style.paddingRight = scrollBeforeLock.paddingRight;
+        scrollBeforeLock = null;
+      }
+    };
   }, [locked]);
 }
 

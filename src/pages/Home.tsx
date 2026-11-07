@@ -1,24 +1,19 @@
 import { useState } from 'react';
-import { Icon, type IconName } from '../components/Icon';
+import { Icon } from '../components/Icon';
 import { ButtonLink, Cursive, Img, Reveal, SectionHead } from '../components/Primitives';
+import { BrandHighlights } from '../components/BrandHighlights';
 import { ProductCard } from '../components/ProductCard';
-import { PRODUCT_BY_ID, SIZES, pick, unitPrice, type SizeId } from '../data/menu';
+import { PRODUCTS, PRODUCT_BY_ID, SIZES, pick, unitPrice, type SizeId } from '../data/menu';
 import { IMAGES, SITE } from '../data/site';
 import { cart } from '../lib/cart';
 import { Link } from '../lib/router';
 import { cx, openCartDrawer, peso, useParallax, useTitle } from '../lib/ui';
 
-const STATS: [IconName, string, string][] = [
-  ['leaf-fill', 'Specialty Coffee', 'Premium beans'],
-  ['cup-fill', 'Unique Creations', 'Signature drinks'],
-  ['cloud-sun', 'Chill Space', 'By the bay'],
-];
-
 /** Round ▶ button + "Watch Story", sized to match the main button (reference). */
 function StoryLink({ className }: { className?: string }) {
   return (
     <Link to="/about" className={cx('group inline-flex items-center gap-3.5 text-[16.5px] font-semibold', className)}>
-      <span className="grid h-[58px] w-[58px] place-items-center rounded-full border-[1.5px] border-white/85 transition-colors duration-300 group-hover:bg-white group-hover:text-ink">
+      <span className="hero-story-circle grid h-[58px] w-[58px] place-items-center rounded-full border-[1.5px] border-white/85 transition-colors duration-300 group-hover:bg-white group-hover:text-ink">
         <Icon name="play" size={22} className="ml-0.5" />
       </span>
       Watch Story
@@ -27,101 +22,71 @@ function StoryLink({ className }: { className?: string }) {
 }
 
 function Hero() {
-  const featured = pick(['caramel-macchiato', 'spanish-latte', 'cookies-cream']);
   return (
     <section aria-labelledby="hero-title"
-      className="relative isolate flex flex-col overflow-hidden pt-[76px] lg:h-[100svh] lg:max-h-[1100px] lg:min-h-[760px] lg:pt-[100px]">
+      className="home-first-screen relative isolate flex flex-col overflow-hidden pt-[76px] lg:pt-[100px]">
       {/* Whole hero = the photo: the soft, cup-free left part of the shot fills every edge (no flat black)… */}
       <div aria-hidden="true" className="absolute inset-0 -z-20 overflow-hidden">
         <img src={IMAGES.heroBg} alt="" width={520} height={1214} decoding="async"
-          className="h-full w-full object-cover [object-position:50%_60%] blur-[2px]" />
+          className="h-full w-full object-cover [object-position:50%_60%]" />
       </div>
       {/* …and the sharp photo sits centre-right, its left and right edges dissolving into the blur */}
-      <div aria-hidden="true" className="absolute inset-y-0 right-[3%] -z-10 hidden aspect-[1295/1214] [mask-image:linear-gradient(90deg,transparent_0%,#000_38%,#000_80%,transparent_100%)] lg:block">
-        <img src={IMAGES.hero} alt="" width={1295} height={1214} fetchPriority="high" decoding="async"
-          className="h-full w-full animate-[hero-in_1.6s_var(--ease-out-quint)_both] object-cover" />
-      </div>
       {/* Darken the top so the dark header melts into the photo (no visible edge) */}
       <div aria-hidden="true" className="absolute inset-x-0 top-0 -z-10 h-[300px] bg-[linear-gradient(180deg,var(--color-ink)_76px,rgba(8,8,8,.72)_130px,rgba(8,8,8,.3)_200px,transparent_100%)] lg:h-[400px] lg:bg-[linear-gradient(180deg,var(--color-ink)_100px,rgba(8,8,8,.55)_150px,rgba(8,8,8,.18)_230px,transparent_100%)]" />
       {/* Gentle shade behind the text only, and a short fade into the next section */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(0,0,0,.3)_0%,rgba(0,0,0,.12)_38%,transparent_55%),linear-gradient(0deg,var(--color-ink)_0%,transparent_9%)]" />
+      <div aria-hidden="true" className="hero-floor-shade absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(0,0,0,.3)_0%,rgba(0,0,0,.12)_38%,transparent_55%),linear-gradient(0deg,var(--color-ink)_0%,transparent_9%)]" />
 
+      <div className="hero-scene relative isolate flex flex-col">
+      <div aria-hidden="true" className="hero-photo-desktop absolute inset-y-0 right-[3%] -z-10 hidden aspect-[1295/1214] [mask-image:linear-gradient(90deg,transparent_0%,#000_38%,#000_80%,transparent_100%)] lg:block">
+        <img src={IMAGES.hero} alt="" width={1295} height={1214} fetchPriority="high" decoding="async"
+          className="h-full w-full object-cover" />
+      </div>
       {/* Phones/tablets: cup to the right of the headline */}
-      <div aria-hidden="true" className="pointer-events-none absolute right-[-14%] top-[104px] -z-10 aspect-square w-[74%] max-w-[520px] [mask-image:linear-gradient(90deg,transparent_0%,#000_38%),linear-gradient(0deg,transparent_0%,#000_28%,#000_94%,transparent_100%)] [-webkit-mask-composite:source-in] [mask-composite:intersect] sm:right-[-4%] sm:w-[56%] lg:hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute right-[-14%] top-[28px] -z-10 aspect-square w-[74%] max-w-[520px] [mask-image:linear-gradient(90deg,transparent_0%,#000_38%),linear-gradient(0deg,transparent_0%,#000_28%,#000_94%,transparent_100%)] [-webkit-mask-composite:source-in] [mask-composite:intersect] sm:right-[-4%] sm:w-[56%] lg:hidden">
         <img src={IMAGES.heroSquare} alt="" width={975} height={975} fetchPriority="high"
-          className="h-full w-full animate-[hero-in_1.6s_var(--ease-out-quint)_both] object-cover" />
+          className="h-full w-full object-cover" />
       </div>
 
-      {/* Thin script, stacked down the right edge (desktop) */}
-      <p aria-hidden="true"
-        className="script pointer-events-none absolute right-[1.4%] top-[37%] z-10 hidden -rotate-[8deg] text-[clamp(60px,5.4vw,108px)] leading-[1.02] text-white [text-shadow:0_2px_18px_rgba(0,0,0,.9)] lg:block">
-        Good<br /><span className="ml-[.5em]">Coffee</span><br />Better<br /><span className="ml-[.35em]">People.</span>
+      <p className="hero-original-slogan script pointer-events-none absolute z-10 text-white">
+        <span className="slogan-phrase"><span className="slogan-word">Good</span> <span className="slogan-word">Coffee</span></span>
+        <span className="slogan-phrase"><span className="slogan-word">Better</span> <span className="slogan-word">People.</span></span>
       </p>
 
-      {/* Phones/tablets: the same script, smaller, tucked under the cup on the right */}
-      <p aria-hidden="true"
-        className="script pointer-events-none absolute right-[5%] top-[calc(104px+min(74vw,520px)*0.8)] z-10 -rotate-[8deg] text-right text-[clamp(28px,8.4vw,34px)] leading-[1.05] text-white [text-shadow:0_2px_14px_rgba(0,0,0,.95)] sm:right-[6%] sm:top-[calc(104px+min(56vw,520px)*0.8)] sm:text-[clamp(38px,5.6vw,50px)] lg:hidden">
-        Good Coffee<br /><span className="mr-[.4em]">Better People.</span>
-      </p>
-
-      <div className="shell relative z-10 flex flex-1 items-start pt-6 sm:pt-10 lg:items-center lg:pt-0">
-        <div className="max-w-[720px]">
+      <div className="hero-copy-shell shell relative z-10 flex flex-1 items-start pt-6 sm:pt-10 lg:items-center lg:pt-0">
+        <div className="hero-copy-main max-w-[720px]">
           <p className="hero-eyebrow animate-rise whitespace-nowrap font-semibold text-soft uppercase">
             Coffee <span className="mx-1 text-white/40">/</span> Milkshake <span className="mx-1 text-white/40">/</span> <span className="text-mute">Good Vibes</span>
           </p>
           <h1 id="hero-title" className="display grunge mt-4 animate-rise text-[64px] text-[#ececec] [animation-delay:80ms] sm:text-[96px] lg:mt-5 lg:text-[clamp(96px,9.4vw,184px)]">
             Brew<br />Good<br /><span className="text-outline">Days</span>
           </h1>
-          <p className="mt-5 animate-rise text-[20px] font-extrabold [animation-delay:160ms] lg:mt-7 lg:text-[26px]">KATRIBO</p>
-          <p className="mt-2 max-w-[60%] animate-rise text-[14.5px] leading-[1.6] text-soft [animation-delay:220ms] sm:max-w-[420px] lg:text-[17.5px]">
+          <p className="hero-brand mt-5 animate-rise text-[20px] font-extrabold [animation-delay:160ms] lg:mt-7 lg:text-[26px]">KATRIBO</p>
+          <p className="hero-intro mt-2 max-w-[60%] animate-rise text-[14.5px] leading-[1.6] text-soft [animation-delay:220ms] sm:max-w-[420px] lg:text-[17.5px]">
             {SITE.intro}
           </p>
           {/* Phones: single Order Now (reference) — desktop: Explore Menu + Watch Story */}
           <div className="mt-6 animate-rise [animation-delay:300ms] lg:hidden">
             <ButtonLink to="/menu" arrow>Order Now</ButtonLink>
           </div>
-          <div className="mt-9 hidden animate-rise items-center gap-7 [animation-delay:300ms] lg:flex">
+          <div className="hero-actions mt-9 hidden animate-rise items-center gap-7 [animation-delay:300ms] lg:flex">
             <ButtonLink to="/menu" size="lg" arrow className="min-w-[200px]">Explore Menu</ButtonLink>
             <StoryLink />
           </div>
         </div>
       </div>
 
-      {/* Phones: FEATURED row (reference mobile) */}
-      <div className="shell relative z-10 mt-10 pb-4 lg:hidden">
-        <p className="text-[12px] font-semibold tracking-[.22em] text-soft uppercase">Featured</p>
-        <ul className="mt-3 grid grid-cols-3 gap-3">
-          {featured.map((p) => (
-            <li key={p.id}>
-              <Link to={`/menu/${p.id}`} className="block">
-                <span className="warm-glow block aspect-square overflow-hidden rounded-xl ring-1 ring-white/[.07]">
-                  <img src={p.image} alt="" loading="lazy" className="h-full w-full object-cover" />
-                </span>
-                <span className="mt-2 block text-[12.5px] leading-tight font-semibold">{p.name}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
       </div>
 
-      {/* Desktop: three highlights across the full width */}
-      <div className="shell relative z-10 hidden lg:block">
-        <ul className="flex items-stretch py-9">
-          {STATS.map(([icon, a, b], i) => (
-            <li key={a} style={{ animationDelay: `${420 + i * 70}ms` }}
-              className={cx('flex animate-rise items-center gap-5 pr-[clamp(36px,4vw,72px)]', i > 0 && 'border-l-[1.5px] border-white/45 pl-[clamp(36px,4vw,72px)]')}>
-              <Icon name={icon} size={52} stroke={1.8} className="shrink-0" />
-              <div><strong className="block text-[19px] font-bold">{a}</strong><span className="block text-[15.5px] text-soft">{b}</span></div>
-            </li>
-          ))}
-        </ul>
+      <div className="home-hero-highlights shell relative z-10 mt-10 lg:mt-0">
+        <BrandHighlights />
       </div>
     </section>
   );
 }
 
 function Favorites() {
-  const items = pick(['caramel-macchiato', 'iced-latte', 'spanish-latte', 'chocolate-milkshake', 'matcha-latte', 'strawberry-milkshake', 'ube-milkshake', 'cookies-cream']);
+  const items = PRODUCTS.filter(p => p.featured).sort((a, b) => (a.featuredRank || 10001) - (b.featuredRank || 10001) || a.id.localeCompare(b.id));
+  if (!items.length) return null;
   return (
     <section className="section-y" aria-labelledby="fav-title">
       <div className="shell">
@@ -161,6 +126,7 @@ function Signature() {
   const p = PRODUCT_BY_ID['caramel-macchiato'];
   const also = pick(['spanish-latte', 'brown-sugar-macchiato', 'white-chocolate-mocha']);
   const [size, setSize] = useState<SizeId>('regular');
+  if (!p) return null;
   const price = unitPrice(p.id, size, []);
   return (
     <section className="section-y" aria-labelledby="sig-title">
@@ -174,7 +140,7 @@ function Signature() {
         </Reveal>
         <Reveal delay={100}>
           <p className="eyebrow">Signature drink</p>
-          <h2 id="sig-title" className="display mt-4 text-[44px] sm:text-[64px] xl:text-[80px]">Caramel<br />Macchiato</h2>
+          <h2 id="sig-title" className="display mt-4 text-[44px] sm:text-[64px] xl:text-[80px]">{p.name === 'Caramel Macchiato' ? <>Caramel<br />Macchiato</> : p.name}</h2>
           <p className="tabular mt-4 text-[30px] font-bold lg:text-[34px]">{peso(price)}</p>
           <p className="mt-4 max-w-[500px] text-[16px] leading-relaxed text-mute lg:text-[17px]">{p.description}</p>
           <div className="mt-7 flex flex-wrap gap-2.5" role="radiogroup" aria-label="Size">
@@ -186,9 +152,9 @@ function Signature() {
             ))}
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button type="button" className="btn btn-primary btn-lg"
+            <button type="button" className="btn btn-primary btn-lg" disabled={price == null || p.soldOut}
               onClick={() => { if (cart.add(p.id, { size })) openCartDrawer(`${p.name} · ${size === 'large' ? 'Large' : 'Regular'}`); }}>
-              <span>Add to Cart</span><span className="tabular border-l border-ink/20 pl-3">{peso(price)}</span>
+              <span>{p.soldOut ? 'Sold out' : 'Add to Cart'}</span><span className="tabular border-l border-ink/20 pl-3">{peso(price)}</span>
             </button>
             <ButtonLink to={`/menu/${p.id}`} variant="outline" size="lg">View Details</ButtonLink>
           </div>

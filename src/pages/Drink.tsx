@@ -51,7 +51,7 @@ export default function Drink({ params }: { params: Record<string, string> }) {
     return <NotFound docTitle="Drink not found" title="This drink isn’t on the menu" message="It may have been renamed or removed. Here’s what’s brewing instead." />;
   }
 
-  const orderable = p.price != null;
+  const orderable = p.price != null && !p.soldOut;
   const food = isFood(p);
   const unit = unitPrice(p.id, size, addons);
   const total = unit == null ? null : unit * qty;
@@ -69,7 +69,7 @@ export default function Drink({ params }: { params: Record<string, string> }) {
       {added
         ? <span className="flex flex-1 items-center justify-center gap-2"><Icon name="check" size={19} stroke={2.6} />Added to cart</span>
         : <>
-            <span className="flex items-center gap-2.5"><Icon name="bag" size={19} stroke={2} /><span><span className="sm:hidden">Add</span><span className="hidden sm:inline">Add to Cart</span></span></span>
+            <span className="flex items-center gap-2.5"><Icon name="bag" size={19} stroke={2} />{p.soldOut ? <span>Sold out</span> : <span><span className="sm:hidden">Add</span><span className="hidden sm:inline">Add to Cart</span></span>}</span>
             <span className="price-chip">{orderable ? peso(total) : '—'}</span>
           </>}
     </button>
@@ -97,14 +97,14 @@ export default function Drink({ params }: { params: Record<string, string> }) {
               <p className="eyebrow flex animate-rise items-center gap-3"><span aria-hidden="true" className="h-px w-8 bg-crema/80" />{p.category}</p>
               <h1 className="mt-3 animate-rise text-[40px] font-black leading-[1.02] tracking-[-0.035em] [animation-delay:60ms] sm:text-[52px] xl:text-[64px]">{p.name}</h1>
               <p className={cx('tabular mt-4 animate-rise [animation-delay:120ms]', orderable ? 'text-[34px] font-extrabold lg:text-[40px]' : 'text-[19px] font-semibold text-mute')}>
-                {orderable ? peso(unit) : 'Price unavailable'}
+                {p.price != null ? peso(unit) : 'Price unavailable'}
                 {orderable && !food && <span className="ml-3 align-middle text-[15px] font-semibold text-mute">{SIZES.find((s) => s.id === size)?.label}</span>}
               </p>
               {p.description && <p className="mt-5 max-w-[560px] animate-rise text-[17.5px] leading-[1.7] text-soft [animation-delay:180ms] lg:text-[19px]">{p.description}</p>}
 
               {!orderable && (
                 <p className="mt-6 flex max-w-[560px] gap-3 rounded-2xl border border-white/15 bg-white/[.03] p-4 text-[16px] leading-relaxed text-soft">
-                  <Icon name="info" size={19} className="mt-0.5 shrink-0" />This item can&apos;t be ordered online yet — pricing is still being confirmed by the café.
+                  <Icon name="info" size={19} className="mt-0.5 shrink-0" />{p.soldOut ? 'This drink is currently sold out. Please choose another favorite from the menu.' : 'This item can’t be ordered online yet — pricing is still being confirmed by the café.'}
                 </p>
               )}
 

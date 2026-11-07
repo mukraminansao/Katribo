@@ -46,8 +46,8 @@ export function Totals({ subtotal, className }: { subtotal: number; className?: 
 /** Payment methods shown at checkout (UI only for now — no online payment is processed). */
 export const PAYMENTS: { id: 'cash' | 'gcash' | 'card'; label: string; sub: string; hint: string; icon: IconName }[] = [
   { id: 'cash', label: 'Cash', sub: 'Pay at the counter', hint: 'Pay in cash at the counter when you pick up your order.', icon: 'cash' },
-  { id: 'gcash', label: 'GCash', sub: 'Pay with your GCash app', hint: 'Pay using your GCash app.', icon: 'wallet' },
-  { id: 'card', label: 'Card', sub: 'Debit / ATM or credit', hint: 'Pay with your debit / ATM or credit card.', icon: 'card' },
+  { id: 'gcash', label: 'GCash', sub: 'Pay at pickup', hint: 'GCash selected for pickup. Confirm availability with the team at the counter; no online payment is collected.', icon: 'wallet' },
+  { id: 'card', label: 'Card', sub: 'Pay at pickup', hint: 'Card selected for pickup. Confirm availability with the team at the counter; no online payment is collected.', icon: 'card' },
 ];
 export type PaymentId = (typeof PAYMENTS)[number]['id'];
 
@@ -101,10 +101,11 @@ function Line({ item, index }: { item: CartItem; index: number }) {
         <div className="min-w-0 pr-11">
           <h3 className="text-[17px] leading-snug font-bold sm:text-[19px]"><Link to={`/menu/${p.id}`} className="underline-offset-4 hover:underline">{p.name}</Link></h3>
           {opts && <p className="mt-0.5 text-[14.5px] text-soft">{opts}</p>}
+          {p.soldOut ? <p className="mt-1 text-[13px] font-semibold text-crema">Sold out — remove this item before checkout.</p> : null}
           <p className="tabular mt-1 text-[14px] text-mute">{peso(unit)} each</p>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Stepper size="sm" value={item.qty} label={`Quantity for ${p.name}`} onChange={(n) => (n < 1 ? remove() : cart.setQty(item.key, n))} min={0} />
+          <Stepper size="sm" value={item.qty} label={`Quantity for ${p.name}`} disabled={p.soldOut} onChange={(n) => (n < 1 ? remove() : cart.setQty(item.key, n))} min={0} />
           <p className="tabular text-[19px] font-extrabold sm:text-[21px]">{peso(unit * item.qty)}</p>
         </div>
       </div>

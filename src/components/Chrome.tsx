@@ -1,10 +1,9 @@
 /** Site chrome: header, mobile menu, search, mobile tab bar, footer, toast. */
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { PRODUCTS } from '../data/menu';
+import { useEffect, useRef, useState } from 'react';
 import { IMAGES, SITE } from '../data/site';
 import { useCart } from '../lib/cart';
-import { Link, NavLink, useLocation, useNavigate } from '../lib/router';
-import { cx, openCartDrawer, peso, useScrolled, useScrollLock, useToast } from '../lib/ui';
+import { Link, NavLink, useLocation } from '../lib/router';
+import { cx, openCartDrawer, useScrolled, useScrollLock, useToast } from '../lib/ui';
 import { Icon, type IconName } from './Icon';
 import { Cursive, Placeholder } from './Primitives';
 
@@ -45,7 +44,7 @@ export function Logo({ variant = 'mark', className, alt = '' }: { variant?: 'mar
   );
 }
 
-export function Header({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void }) {
+export function Header({ onMenu, onSearch, searchOpen = false }: { onMenu: () => void; onSearch: () => void; searchOpen?: boolean }) {
   const scrolled = useScrolled(16);
   const { pathname } = useLocation();
   const overHero = pathname === '/' || pathname === '/about';
@@ -53,11 +52,11 @@ export function Header({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
   return (
     <header className={cx('site-header fixed inset-x-0 top-0 z-50 bg-ink transition-[border-color,box-shadow] duration-500',
       scrolled || !overHero ? 'border-b border-white/[.07] shadow-[0_10px_30px_-12px_rgba(0,0,0,.8)]' : 'border-b border-transparent')}>
-      <div className="relative mx-auto flex h-[76px] max-w-[2200px] items-center gap-6 px-[clamp(16px,2.6vw,52px)] lg:h-[100px]">
-        <Link to="/" className="-ml-1 flex shrink-0 items-center transition-opacity hover:opacity-90" aria-label="KATRIBO home"><Logo className="w-[150px] sm:w-[164px] lg:w-[clamp(190px,13.5vw,230px)]" /></Link>
+      <div className="header-layout relative mx-auto flex h-[76px] max-w-[2200px] items-center gap-3 px-[clamp(16px,2.6vw,52px)] lg:h-[100px] lg:gap-6">
+        <Link to="/" className="-ml-1 flex shrink-0 items-center transition-opacity hover:opacity-90" aria-label="KATRIBO home"><Logo className="w-[132px] sm:w-[164px] lg:w-[clamp(150px,13vw,220px)]" /></Link>
 
-        <nav aria-label="Primary" className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:block">
-          <ul className="flex items-center gap-[clamp(44px,4.6vw,92px)]">
+        <nav aria-label="Primary" className="hidden min-w-0 flex-1 lg:block">
+          <ul className="flex w-full items-center justify-evenly gap-3">
             {NAV.map((n) => (
               <li key={n.to}>
                 <NavLink to={n.to} end={n.to === '/'} className={({ isActive }) => cx('nav-link', isActive && 'is-active')}>{n.label}</NavLink>
@@ -66,14 +65,12 @@ export function Header({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          <button type="button" className="icon-btn hidden lg:inline-grid" onClick={onSearch} aria-label="Search drinks (press /)"><Icon name="search" size={34} stroke={2.2} /></button>
-          {count > 0 && (
-            <button type="button" onClick={() => openCartDrawer()} className="icon-btn relative" aria-label={`Open cart, ${count} item${count > 1 ? 's' : ''}`}>
+        <div className="header-actions ml-auto flex shrink-0 items-center gap-0 sm:gap-1">
+          <button type="button" className="icon-btn header-tool" onClick={onSearch} data-menu-search-trigger aria-label="Search menu" title="Search menu (Ctrl+K or /)" aria-haspopup="dialog" aria-expanded={searchOpen} aria-controls="menu-search-dialog" aria-keyshortcuts="Control+K Meta+K /"><Icon name="search" size={30} stroke={2.2} /></button>
+          <button type="button" onClick={() => openCartDrawer()} className="icon-btn header-tool relative" aria-label={count ? `Open cart, ${count} item${count > 1 ? 's' : ''}` : 'Open cart'}>
               <Icon name="bag" size={30} stroke={2} /><CartBadge className="right-0.5 top-0.5" />
-            </button>
-          )}
-          <Link to="/menu" className="btn btn-primary ml-3 hidden h-[62px] px-11 text-[19px] font-bold lg:inline-flex">Order Now</Link>
+          </button>
+          <Link to="/menu" className="btn btn-primary ml-2 hidden h-[48px] px-6 text-[15px] font-bold lg:inline-flex xl:h-[54px] xl:px-8 xl:text-[16px]">Order Now</Link>
           <button type="button" className="icon-btn lg:hidden" onClick={onMenu} aria-label="Open menu"><Icon name="menu" size={28} stroke={2} /></button>
         </div>
       </div>
@@ -163,57 +160,6 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
           <Link to="/menu" className="btn btn-primary btn-lg w-full animate-rise [animation-delay:500ms]"><span>Order Now</span><Icon name="arrow" size={17} className="arrow" /></Link>
           <Cursive as="p" text="Good coffee, better people." className="animate-fade text-center text-[30px] text-soft [animation-delay:600ms]" />
         </div>
-      </div>
-    </div>
-  );
-}
-
-export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
-  useScrollLock(open);
-  const [q, setQ] = useState('');
-  const [active, setActive] = useState(0);
-  const navigate = useNavigate();
-  const results = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    return PRODUCTS.filter((p) => !s || p.name.toLowerCase().includes(s) || p.category.toLowerCase().includes(s)).slice(0, 8);
-  }, [q]);
-  useEffect(() => { if (open) { setQ(''); setActive(0); } }, [open]);
-  useEffect(() => setActive(0), [q]);
-  if (!open) return null;
-  const go = (id: string) => { onClose(); navigate(`/menu/${id}`); };
-  return (
-    <div className="fixed inset-0 z-[95] animate-fade bg-black/80 backdrop-blur-sm" onClick={onClose} role="dialog" aria-modal="true" aria-label="Search drinks">
-      <div className="mx-auto mt-3 w-[calc(100%-24px)] max-w-2xl animate-pop overflow-hidden rounded-2xl border border-line bg-ink-2 shadow-[0_40px_80px_-20px_rgba(0,0,0,.9)] sm:mt-[12vh]"
-        onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3 border-b border-line px-5">
-          <Icon name="search" className="text-mute" />
-          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search drinks…" aria-label="Search drinks"
-            className="h-16 flex-1 bg-transparent text-lg font-medium outline-none placeholder:text-[#5f5f5f]"
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowDown') { e.preventDefault(); setActive((a) => Math.min(a + 1, results.length - 1)); }
-              if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
-              if (e.key === 'Enter' && results[active]) go(results[active].id);
-              if (e.key === 'Escape') onClose();
-            }} />
-          <kbd className="hidden rounded-md border border-line px-2 py-1 text-[11px] text-mute sm:block">ESC</kbd>
-          <button type="button" className="icon-btn sm:hidden" onClick={onClose} aria-label="Close search"><Icon name="close" /></button>
-        </div>
-        <ul className="max-h-[60vh] overflow-y-auto p-2">
-          {results.length === 0 && <li className="px-4 py-8 text-center text-mute">No drinks match “{q}”.</li>}
-          {results.map((p, i) => (
-            <li key={p.id}>
-              <button type="button" onMouseEnter={() => setActive(i)} onClick={() => go(p.id)}
-                className={cx('flex w-full items-center gap-4 rounded-xl p-2.5 text-left transition-colors', i === active && 'bg-card')}>
-                <img src={p.image} alt="" className="h-14 w-14 rounded-lg object-cover [object-position:50%_35%]" />
-                <span className="min-w-0 flex-1">
-                  <strong className="block truncate font-semibold">{p.name}</strong>
-                  <span className="text-[13px] text-mute">{p.category}</span>
-                </span>
-                <span className={cx('tabular text-sm', p.price == null ? 'text-mute' : 'font-semibold')}>{p.price == null ? '—' : peso(p.price)}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );
