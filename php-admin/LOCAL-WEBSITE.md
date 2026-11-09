@@ -1,6 +1,6 @@
 # Restored GitHub website
 
-The customer website in `katribo-react/` uses the design restored from https://github.com/mukraminbariwa5-create/Katribo at revision `aa6c17a6717bfb5c9ab4264fcc2145289622eb0f`, with a local connection to the PHP admin and MySQL database.
+The customer website in `katribo-react/` uses the design restored from https://github.com/mukraminansao/Katribo at revision `aa6c17a6717bfb5c9ab4264fcc2145289622eb0f`, with a local connection to the PHP admin and MySQL database.
 
 Double-click `Start-Katribo.cmd` to start the website and open http://localhost:10000/.
 Start Apache and MySQL in XAMPP, then run the launcher. http://localhost/Katribo/ opens the same website. If the Node server is stopped, that address shows startup instructions. The different port preserves the GitHub design's routing and asset URLs.
